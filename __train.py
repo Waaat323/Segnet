@@ -14,15 +14,15 @@ import chainer
 import chainer.functions as F
 from chainer import cuda
 from chainer import optimizers
-from mnist_loader import mnist_loader#######
+from mnist_loader import mnist_loader
 from mnist_network import CNN
 
 
-def load_dataset(ndim=2):
+def load_mnist(ndim=2):
     cp = configparser.ConfigParser()
     cp.read('config')
     root_dir = cp.get('dataset_dir', 'dir_path')
-    x_train, x_test, c_train, c_test = mnist_loader(ndim, root_dir)##########
+    x_train, x_test, c_train, c_test = mnist_loader(ndim, root_dir)
     num_train = len(x_train)
     num_test = len(x_test)
     return x_train, x_test, c_train, c_test, num_train, num_test
@@ -119,10 +119,10 @@ def print_result_log(epoch, train_loss_log, test_loss_log,
 
 if __name__ == '__main__':
     (x_train, x_test, c_train, c_test,
-     num_train, num_test) = load_dataset(ndim=3)
+     num_train, num_test) = load_mnist(ndim=3)
     gpu, num_epochs, batch_size, learning_rate = training_parameters()
     xp = cuda.cupy if gpu >= 0 else np
-    model = Segnet()
+    model = CNN()
     optimizer = optimizers.Adam(learning_rate)
     optimizer.setup(model)
     if gpu >= 0:
