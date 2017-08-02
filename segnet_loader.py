@@ -25,11 +25,15 @@ def transform(in_data):
 
 def CamVid_loader(dataset_dir=root_dir):
     # Dataset
+    
     #train = CamVidDataset(dataset_dir, split='train')
-    train = concat_examples(CamVidDataset(split='train'))
-    train = TransformDataset(train, transform)
+    train = concat_examples(CamVidDataset(dataset_dir, split='train'))
+    #train = TransformDataset(train, transform)
+    #train = concat_examples(train)
     #test = CamVidDataset(dataset_dir, split='val')
-    test = concat_examples(CamVidDataset(split='val'))
+    test = concat_examples(CamVidDataset(dataset_dir, split='val'))
+    #test = concat_examples(test)
+
 
     """
     train_images = np.array(train[:, 0])
@@ -37,7 +41,8 @@ def CamVid_loader(dataset_dir=root_dir):
     test_images = np.array(test[:, 0])
     test_classes = np.array(test[:, 1])
     """
- 
+   
+    
     train_images = train[:, 0]
     train_labels = train[:, 1]
     test_images = test[:, 0]
