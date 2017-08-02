@@ -15,7 +15,7 @@ import chainer.functions as F
 from chainer import cuda
 from chainer import optimizers
 from mnist_loader import mnist_loader#######
-from mnist_network import CNN
+from mnist_network import SegNet
 
 
 def load_dataset(ndim=2):
@@ -122,7 +122,7 @@ if __name__ == '__main__':
      num_train, num_test) = load_dataset(ndim=3)
     gpu, num_epochs, batch_size, learning_rate = training_parameters()
     xp = cuda.cupy if gpu >= 0 else np
-    model = Segnet()
+    model = SegNet()
     optimizer = optimizers.Adam(learning_rate)
     optimizer.setup(model)
     if gpu >= 0:
