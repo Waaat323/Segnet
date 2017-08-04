@@ -14,7 +14,7 @@ import chainer
 import chainer.functions as F
 from chainer import cuda
 from chainer import optimizers
-from mnist_loader import mnist_loader#######
+from segnet_loader import CamVid_loader#######
 from mnist_network import SegNet
 
 
@@ -22,7 +22,7 @@ def load_dataset(ndim=2):
     cp = configparser.ConfigParser()
     cp.read('config')
     root_dir = cp.get('dataset_dir', 'dir_path')
-    x_train, x_test, c_train, c_test = mnist_loader(ndim, root_dir)##########
+    x_train, x_test, c_train, c_test = CamVid_loader(ndim, root_dir)##########
     num_train = len(x_train)
     num_test = len(x_test)
     return x_train, x_test, c_train, c_test, num_train, num_test
@@ -41,7 +41,7 @@ def train_part(model, num_train, x_train, c_train, xp, batch_size):
     epoch_accs = []                 # エポック内の認識率
     for i in tqdm(range(0, num_train, batch_size)):
         x_batch = xp.asarray(x_train[i:i+batch_size], dtype=xp.float32)  # 1->バッチサイズまでのループ
-        ｃ_batch = xp.asarray(c_train[i:i+batch_size], dtype=xp.int32)
+        c_batch = xp.asarray(c_train[i:i+batch_size], dtype=xp.int32)
         y_batch = model(x_batch)
 
         # 損失関数の計算
@@ -66,9 +66,9 @@ def validation(model, num_test, x_test, c_test, xp, batch_size):      # バリ�
         losses = []               # エポック内の損失値
         accs = []                 # エポック内の認識率
         x_batch = xp.asarray(x_test[i:i+batch_size], dtype=xp.float32)  # 1->バッチサイズまでのループ
-        ｃ_batch = xp.asarray(c_test[i:i+batch_size], dtype=xp.int32)
+        c_batch = xp.asarray(c_test[i:i+batch_size], dtype=xp.int32)
         x_batch = chainer.Variable(x_batch)
-        ｃ_batch = chainer.Variable(c_batch)
+        c_batch = chainer.Variable(c_batch)
         with chainer.no_backprop_mode():
             y_batch = model(x_batch)
 
