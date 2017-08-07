@@ -5,7 +5,7 @@ Created on Mon Jul 31 14:26:42 2017
 @author: kawalab
 """
 
-from copy import deepcopy   # 深い複製
+from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -14,20 +14,19 @@ import chainer
 import chainer.functions as F
 from chainer import cuda
 from chainer import optimizers
-from segnet_loader import CamVid_loader#######
-from mnist_network import SegNet
+from segnet_loader import CamVid_loader
+from segnet_network import SegNetBasic
 
-
-def load_dataset(ndim=2):
+def Load_Dataset(ndim=2):
     cp = configparser.ConfigParser()
     cp.read('config')
     root_dir = cp.get('dataset_dir', 'dir_path')
-    x_train, x_test, c_train, c_test = CamVid_loader(ndim, root_dir)##########
+    x_train, x_test, c_train, c_test = CamVid_loader(root_dir)
     num_train = len(x_train)
     num_test = len(x_test)
     return x_train, x_test, c_train, c_test, num_train, num_test
 
-def training_parameters():
+def Training_Parameters():
     cp = configparser.ConfigParser()
     cp.read('config')
     use_device = int(cp.get('Hyper_parameteters', 'gpu_on'))
@@ -57,6 +56,7 @@ def train_part(model, num_train, x_train, c_train, xp, batch_size):
     epoch_acc = np.mean(cuda.to_cpu(xp.stack(epoch_accs)))     # エポックの平均認識率
     train_loss_log.append(epoch_loss)
     train_acc_log.append(epoch_acc)
+    
     return train_loss_log, train_acc_log
 
 def validation(model, num_test, x_test, c_test, xp, batch_size):      # バリデーション
@@ -83,6 +83,20 @@ def validation(model, num_test, x_test, c_test, xp, batch_size):      # バリ�
     test_acc_log.append(test_acc)
     return loss, test_loss_log, test_acc_log
 
+def Print_Result(x_test, best_model,xp):
+    n = 3   # 枚数
+    x_batch = xp.asarray(x_test[:n])
+    y_batch = best_model(x_batch)
+    y_batch = cuda.to_cpu(y_batch.data)
+    for i in range(n):
+        # 入力画像
+        plt.imshow(cuda.to_cpu(x_batch[i].transpose(1, 2, 0)))
+        plt.show()
+        # 出力画像
+        y_result = y_batch[i].argmax(0)
+        plt.matshow(y_result)
+        plt.show()
+
 def save_best_model(loss, best_val_loss, model, best_model, best_epoch):
     # 最小損失ならそのモデルを保持
     if loss.data < best_val_loss:
@@ -90,6 +104,7 @@ def save_best_model(loss, best_val_loss, model, best_model, best_epoch):
         best_val_loss = loss.data
         best_epoch = epoch
     
+    # そうでなければそのまま    
     else:
         best_model = best_model
         best_val_loss = best_val_loss
@@ -97,7 +112,7 @@ def save_best_model(loss, best_val_loss, model, best_model, best_epoch):
         
     return best_model, best_val_loss, best_epoch
 
-def print_result_log(epoch, train_loss_log, test_loss_log,
+def Print_Graph(epoch, train_loss_log, test_loss_log,
                      train_acc_log, test_acc_log):
 
     # グラフの表示
@@ -119,10 +134,10 @@ def print_result_log(epoch, train_loss_log, test_loss_log,
 
 if __name__ == '__main__':
     (x_train, x_test, c_train, c_test,
-     num_train, num_test) = load_dataset(ndim=3)
-    gpu, num_epochs, batch_size, learning_rate = training_parameters()
+     num_train, num_test) = Load_Dataset(ndim=3)
+    gpu, num_epochs, batch_size, learning_rate = Training_Parameters()
     xp = cuda.cupy if gpu >= 0 else np
-    model = SegNet()
+    model = SegNetBasic()
     optimizer = optimizers.Adam(learning_rate)
     optimizer.setup(model)
     if gpu >= 0:
@@ -146,11 +161,11 @@ if __name__ == '__main__':
                                                                 best_val_loss, 
                                                                 model, best_model, best_epoch)
 
-        print_result_log(epoch, train_loss_log, test_loss_log,
+        Print_Graph(epoch, train_loss_log, test_loss_log,
                          train_acc_log, test_acc_log)
         
-        
-        # ハイパーパラメータ等の表示
+    Print_Result(x_test, best_model,xp)
+
     print('Hyper Parameters')
     print('min loss = {}'. format(best_val_loss))
     print('Epocks = {}'. format(num_epochs))
